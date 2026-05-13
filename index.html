@@ -159,7 +159,8 @@ h1 { font-size: 1.5rem; }
     function loadTasks() {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        tasks = stored ? JSON.parse(stored) : [];
+        const parsed = stored ? JSON.parse(stored) : [];
+        tasks = Array.isArray(parsed) ? parsed : [];
       } catch (e) {
         tasks = [];
       }
@@ -251,11 +252,12 @@ h1 { font-size: 1.5rem; }
     }
 
     function updateStats() {
-      const total = tasks.length;
-      const completed = tasks.filter(t => t.completed).length;
-      const remaining = total - completed;
+      const source = currentFilter ? tasks.filter(t => t.tags.includes(currentFilter)) : tasks;
+      const completed = source.filter(t => t.completed).length;
+      const remaining = source.length - completed;
+      const prefix = currentFilter ? `[${currentFilter}] ` : '';
       document.getElementById('stats').textContent =
-        `残り ${remaining}件 / 完了 ${completed}件`;
+        `${prefix}残り ${remaining}件 / 完了 ${completed}件`;
     }
 
     function render() {
