@@ -32,7 +32,7 @@ function addTask(text, tagsInput) {
     .map(t => t.trim())
     .filter(t => t.length > 0);
   tasks.push({
-    id: String(Date.now()),
+    id: crypto.randomUUID(),
     text: trimmed,
     completed: false,
     tags: tags,
