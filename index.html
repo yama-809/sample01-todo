@@ -281,18 +281,19 @@ h1 { font-size: 1.5rem; }
         }
       });
 
-      // Enter キーで追加
-      document.getElementById('task-input').addEventListener('keydown', e => {
+      // Enter キーで追加（task-input と tag-input 両方対応）
+      function handleEnterKey(e) {
         if (e.key === 'Enter') document.getElementById('add-btn').click();
-      });
+      }
+      document.getElementById('task-input').addEventListener('keydown', handleEnterKey);
+      document.getElementById('tag-input').addEventListener('keydown', handleEnterKey);
 
       // チェックボックスと削除ボタン（イベント委譲）
       document.getElementById('task-list').addEventListener('click', e => {
         if (e.target.matches('input[type="checkbox"]')) {
           toggleTask(e.target.dataset.id);
           render();
-        }
-        if (e.target.matches('.delete-btn')) {
+        } else if (e.target.matches('.delete-btn')) {
           deleteTask(e.target.dataset.id);
           render();
         }
