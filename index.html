@@ -13,14 +13,16 @@
     <h1>📝 TODO アプリ</h1>
   </header>
   <main>
-    <section id="input-area">
+    <section id="input-area" aria-label="タスク入力">
+      <label for="task-input">タスク</label>
       <input type="text" id="task-input" placeholder="タスクを入力...">
+      <label for="tag-input">タグ</label>
       <input type="text" id="tag-input" placeholder="タグ (カンマ区切り)">
       <button id="add-btn">追加</button>
     </section>
     <section id="filter-area"></section>
-    <ul id="task-list"></ul>
-    <p id="stats"></p>
+    <ul id="task-list" aria-label="タスク一覧"></ul>
+    <p id="stats" aria-live="polite"></p>
   </main>
   <script>
     /* Task 3〜5 で追加 */
