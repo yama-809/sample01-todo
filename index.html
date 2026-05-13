@@ -206,8 +206,7 @@ h1 { font-size: 1.4rem; }
       <input type="text" id="task-input" placeholder="タスクを入力...">
       <label for="tag-select">タグ</label>
       <select id="tag-select">
-        <option value="">タグなし</option>
-        <option value="仕事">💼 仕事</option>
+        <option value="仕事" selected>💼 仕事</option>
         <option value="プライベート">🏠 プライベート</option>
       </select>
       <label for="due-date-input">期日</label>
@@ -396,6 +395,7 @@ h1 { font-size: 1.4rem; }
     function init() {
       loadTasks();
       render();
+      document.getElementById('due-date-input').value = getToday();
 
       // タスク追加
       document.getElementById('add-btn').addEventListener('click', () => {
@@ -404,8 +404,8 @@ h1 { font-size: 1.4rem; }
         const tagSelect    = document.getElementById('tag-select');
         if (addTask(textInput.value, dueDateInput.value, tagSelect.value)) {
           textInput.value    = '';
-          dueDateInput.value = '';
-          tagSelect.value    = '';
+          dueDateInput.value = getToday();
+          tagSelect.value    = '仕事';
           render();
           textInput.focus();
         }
