@@ -165,10 +165,10 @@ h1 { font-size: 1.4rem; }
 .tag-work    { background: #e3f2fd; color: #1565c0; }
 .tag-private { background: #f3e5f5; color: #6a1b9a; }
 
-.delete-btn {
-  margin-left: auto;
+.task-footer .delete-btn { margin-left: auto; }
+
+.delete-btn, .edit-btn {
   padding: 5px 12px;
-  background: #ef5350;
   color: white;
   border: none;
   border-radius: 4px;
@@ -177,8 +177,58 @@ h1 { font-size: 1.4rem; }
   white-space: nowrap;
   min-height: 32px;
 }
+.delete-btn { background: #ef5350; }
 .delete-btn:hover  { background: #b71c1c; }
 .delete-btn:active { background: #7f0000; }
+
+.edit-btn { background: #1976d2; }
+.edit-btn:hover  { background: #1565c0; }
+.edit-btn:active { background: #0d47a1; }
+
+/* インライン編集フォーム */
+.task-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.edit-text-input,
+.edit-tag-select,
+.edit-date-input {
+  padding: 10px 8px;
+  border: 1px solid #1976d2;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.edit-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+}
+
+.edit-tag-select { width: auto; background: white; cursor: pointer; }
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-btn, .cancel-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  min-height: 36px;
+}
+.save-btn   { background: #4caf50; color: white; }
+.save-btn:hover   { background: #388e3c; }
+.cancel-btn { background: #e0e0e0; color: #333; }
+.cancel-btn:hover { background: #bdbdbd; }
 
 #input-area label {
   position: absolute;
@@ -232,6 +282,7 @@ h1 { font-size: 1.4rem; }
     let tasks = [];
     let currentDateFilter = 'all'; // 'all' | 'overdue' | 'today' | 'upcoming'
     let currentTagFilter  = 'all'; // 'all' | '仕事' | 'プライベート'
+    let editingTaskId     = null;
 
     function loadTasks() {
       try {
@@ -275,6 +326,19 @@ h1 { font-size: 1.4rem; }
         task.completed = !task.completed;
         saveTasks();
       }
+    }
+
+    function updateTask(id, text, dueDate, tag) {
+      const trimmed = text.trim();
+      if (!trimmed) return false;
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.text    = trimmed;
+        task.dueDate = dueDate || '';
+        task.tag     = tag || '';
+        saveTasks();
+      }
+      return true;
     }
 
     // --- レンダー層 ---
@@ -331,19 +395,40 @@ h1 { font-size: 1.4rem; }
         return;
       }
 
-      list.innerHTML = filtered.map(task => `
-        <li class="task-item${task.completed ? ' completed' : ''}">
-          <div class="task-main">
-            <input type="checkbox" aria-label="${escapeHtml(task.text)}" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
-            <span class="task-text">${escapeHtml(task.text)}</span>
-          </div>
-          <div class="task-footer">
-            ${getTagBadge(task.tag)}
-            ${getDueBadge(task.dueDate, task.completed)}
-            <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
-          </div>
-        </li>
-      `).join('');
+      list.innerHTML = filtered.map(task => {
+        if (task.id === editingTaskId) {
+          return `
+            <li class="task-item">
+              <div class="task-edit-form">
+                <input type="text" class="edit-text-input" value="${escapeHtml(task.text)}" data-id="${escapeHtml(task.id)}">
+                <div class="edit-row">
+                  <select class="edit-tag-select" data-id="${escapeHtml(task.id)}">
+                    <option value="仕事"${task.tag === '仕事' ? ' selected' : ''}>💼 仕事</option>
+                    <option value="プライベート"${task.tag === 'プライベート' ? ' selected' : ''}>🏠 プライベート</option>
+                  </select>
+                  <input type="date" class="edit-date-input" value="${escapeHtml(task.dueDate)}" data-id="${escapeHtml(task.id)}">
+                </div>
+                <div class="edit-actions">
+                  <button class="cancel-btn">キャンセル</button>
+                  <button class="save-btn" data-id="${escapeHtml(task.id)}">保存</button>
+                </div>
+              </div>
+            </li>`;
+        }
+        return `
+          <li class="task-item${task.completed ? ' completed' : ''}">
+            <div class="task-main">
+              <input type="checkbox" aria-label="${escapeHtml(task.text)}" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
+              <span class="task-text">${escapeHtml(task.text)}</span>
+            </div>
+            <div class="task-footer">
+              ${getTagBadge(task.tag)}
+              ${getDueBadge(task.dueDate, task.completed)}
+              <button class="edit-btn" aria-label="「${escapeHtml(task.text)}」を編集" data-id="${escapeHtml(task.id)}">編集</button>
+              <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
+            </div>
+          </li>`;
+      }).join('');
     }
 
     function renderTagFilter() {
@@ -418,13 +503,31 @@ h1 { font-size: 1.4rem; }
       document.getElementById('task-input').addEventListener('keydown', handleEnterKey);
       document.getElementById('due-date-input').addEventListener('keydown', handleEnterKey);
 
-      // チェックボックスと削除ボタン（イベント委譲）
+      // チェックボックス・削除・編集・保存・キャンセル（イベント委譲）
       document.getElementById('task-list').addEventListener('click', e => {
         if (e.target.matches('input[type="checkbox"]')) {
           toggleTask(e.target.dataset.id);
           render();
         } else if (e.target.matches('.delete-btn')) {
           deleteTask(e.target.dataset.id);
+          render();
+        } else if (e.target.matches('.edit-btn')) {
+          editingTaskId = e.target.dataset.id;
+          render();
+          // フォーカスをテキスト入力に移動
+          const input = document.querySelector('.edit-text-input');
+          if (input) { input.focus(); input.select(); }
+        } else if (e.target.matches('.save-btn')) {
+          const id   = e.target.dataset.id;
+          const text = document.querySelector('.edit-text-input').value;
+          const tag  = document.querySelector('.edit-tag-select').value;
+          const date = document.querySelector('.edit-date-input').value;
+          if (updateTask(id, text, date, tag)) {
+            editingTaskId = null;
+            render();
+          }
+        } else if (e.target.matches('.cancel-btn')) {
+          editingTaskId = null;
           render();
         }
       });
