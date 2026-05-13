@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>Tests</title></head>
+<body>
+<pre id="output"></pre>
+<script>
+// --- テスト対象の関数をインライン定義（index.html と同じコードを貼る）---
+const STORAGE_KEY = 'todo-app-tasks';
+let tasks = [];
+let currentFilter = '';
+
+function loadTasks() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    tasks = stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    tasks = [];
+  }
+}
+
+function saveTasks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch (e) { /* プライベートブラウジング等で失敗する場合は無視 */ }
+}
+
+function addTask(text, tagsInput) {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  const tags = tagsInput
+    .split(',')
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+  tasks.push({
+    id: String(Date.now()),
+    text: trimmed,
+    completed: false,
+    tags: tags,
+    createdAt: new Date().toISOString()
+  });
+  saveTasks();
+  return true;
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+}
+
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) {
+    task.completed = !task.completed;
+    saveTasks();
+  }
+}
+
+// --- テストランナー ---
+let passed = 0, failed = 0;
+function assert(label, condition) {
+  if (condition) {
+    log('PASS: ' + label); passed++;
+  } else {
+    log('FAIL: ' + label); failed++;
+  }
+}
+function log(msg) {
+  document.getElementById('output').textContent += msg + '\n';
+}
+
+// --- テストケース ---
+// addTask のテスト
+tasks = [];
+const result1 = addTask('買い物をする', 'プライベート, 急ぎ');
+assert('addTask: 戻り値が true', result1 === true);
+assert('addTask: tasks に1件追加される', tasks.length === 1);
+assert('addTask: text が正しい', tasks[0].text === '買い物をする');
+assert('addTask: tags が正しく分割・trimされる', tasks[0].tags.length === 2 && tasks[0].tags[0] === 'プライベート' && tasks[0].tags[1] === '急ぎ');
+assert('addTask: completed が false', tasks[0].completed === false);
+assert('addTask: id が文字列', typeof tasks[0].id === 'string');
+
+// 空文字テスト
+tasks = [];
+const result2 = addTask('   ', '');
+assert('addTask: 空白のみは false を返す', result2 === false);
+assert('addTask: 空白のみは追加されない', tasks.length === 0);
+
+// タグなしテスト
+tasks = [];
+addTask('タグなしタスク', '');
+assert('addTask: タグなしは tags が空配列', tasks[0].tags.length === 0);
+
+// deleteTask のテスト
+tasks = [];
+addTask('削除対象', '');
+const deleteId = tasks[0].id;
+deleteTask(deleteId);
+assert('deleteTask: 削除後 tasks が空になる', tasks.length === 0);
+
+// 存在しない id を削除しても壊れない
+deleteTask('nonexistent-id');
+assert('deleteTask: 存在しない id は何もしない', tasks.length === 0);
+
+// toggleTask のテスト
+tasks = [];
+addTask('トグル対象', '');
+const toggleId = tasks[0].id;
+toggleTask(toggleId);
+assert('toggleTask: false → true になる', tasks[0].completed === true);
+toggleTask(toggleId);
+assert('toggleTask: true → false に戻る', tasks[0].completed === false);
+
+log('\n結果: ' + passed + ' passed, ' + failed + ' failed');
+</script>
+</body>
+</html>

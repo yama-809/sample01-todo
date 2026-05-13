@@ -151,7 +151,58 @@ h1 { font-size: 1.5rem; }
     <p id="stats" aria-live="polite"></p>
   </main>
   <script>
-    /* Task 3〜5 で追加 */
+    // --- データ層 ---
+    const STORAGE_KEY = 'todo-app-tasks';
+    let tasks = [];
+    let currentFilter = '';
+
+    function loadTasks() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        tasks = stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        tasks = [];
+      }
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch (e) { /* プライベートブラウジング等で失敗する場合は無視 */ }
+    }
+
+    function addTask(text, tagsInput) {
+      const trimmed = text.trim();
+      if (!trimmed) return false;
+      const tags = tagsInput
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+      tasks.push({
+        id: String(Date.now()),
+        text: trimmed,
+        completed: false,
+        tags: tags,
+        createdAt: new Date().toISOString()
+      });
+      saveTasks();
+      return true;
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+    }
+
+    function toggleTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        saveTasks();
+      }
+    }
+
+    // --- レンダー層・イベント層は Task 4〜5 で追加 ---
   </script>
 </body>
 </html>
