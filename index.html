@@ -165,7 +165,12 @@ h1 { font-size: 1.4rem; }
 .tag-work    { background: #e3f2fd; color: #1565c0; }
 .tag-private { background: #f3e5f5; color: #6a1b9a; }
 
-.task-footer .delete-btn { margin-left: auto; }
+.task-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
 
 .delete-btn, .edit-btn {
   padding: 5px 12px;
@@ -424,8 +429,10 @@ h1 { font-size: 1.4rem; }
             <div class="task-footer">
               ${getTagBadge(task.tag)}
               ${getDueBadge(task.dueDate, task.completed)}
-              <button class="edit-btn" aria-label="「${escapeHtml(task.text)}」を編集" data-id="${escapeHtml(task.id)}">編集</button>
-              <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
+              <div class="task-actions">
+                <button class="edit-btn" aria-label="「${escapeHtml(task.text)}」を編集" data-id="${escapeHtml(task.id)}">編集</button>
+                <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
+              </div>
             </div>
           </li>`;
       }).join('');
