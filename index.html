@@ -10,66 +10,95 @@
 body {
   font-family: sans-serif;
   max-width: 600px;
-  margin: 40px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 12px;
   background: #f5f5f5;
   color: #212121;
 }
 
-header { margin-bottom: 24px; }
-h1 { font-size: 1.5rem; }
+@media (min-width: 480px) {
+  body { padding: 24px 16px; margin-top: 16px; }
+}
 
+header { margin-bottom: 16px; }
+h1 { font-size: 1.4rem; }
+
+@media (min-width: 480px) {
+  h1 { font-size: 1.5rem; }
+}
+
+/* 入力エリア: モバイルはグリッド2列 */
 #input-area {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
 }
 
+/* タグ・タスクは全幅 */
+#tag-select,
 #task-input {
-  flex: 1;
-  min-width: 160px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
+  grid-column: 1 / -1;
 }
 
+#tag-select,
+#task-input,
 #due-date-input {
-  width: 160px;
-  min-width: 0;
-  padding: 8px;
+  padding: 12px 10px;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
+  border-radius: 6px;
+  font-size: 1rem; /* iOS zoom防止 */
+  width: 100%;
 }
+
+#tag-select { background: white; cursor: pointer; }
+#due-date-input { cursor: pointer; min-width: 0; }
 
 #add-btn {
-  padding: 8px 16px;
+  padding: 12px 16px;
   background: #4caf50;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
+  white-space: nowrap;
 }
-#add-btn:hover { background: #388e3c; }
+#add-btn:hover  { background: #388e3c; }
+#add-btn:active { background: #2e7d32; }
 
+/* デスクトップは1行レイアウト */
+@media (min-width: 540px) {
+  #input-area { grid-template-columns: auto 1fr auto auto; }
+  #tag-select   { grid-column: 1; }
+  #task-input   { grid-column: 2; }
+  #due-date-input { grid-column: 3; width: auto; }
+  #add-btn      { grid-column: 4; }
+}
+
+/* フィルター */
 #filter-area {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
 }
 
+.filter-section { }
+.filter-label {
+  font-size: 0.75rem;
+  color: #9e9e9e;
+  margin-bottom: 4px;
+}
+
 .filter-btn {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border: 1px solid #ccc;
   border-radius: 16px;
   background: white;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  min-height: 36px;
 }
 .filter-btn.active {
   background: #4caf50;
@@ -77,6 +106,7 @@ h1 { font-size: 1.5rem; }
   border-color: #4caf50;
 }
 
+/* タスクリスト */
 #task-list {
   list-style: none;
   display: flex;
@@ -86,19 +116,46 @@ h1 { font-size: 1.5rem; }
 
 .task-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   background: white;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+.task-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-main input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #4caf50;
+}
+
+.task-text {
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
 .task-item.completed .task-text {
   text-decoration: line-through;
   color: #9e9e9e;
 }
 
-.task-text { flex: 1; word-break: break-word; }
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-left: 30px; /* チェックボックス幅+gap分インデント */
+}
 
 .due-badge {
   font-size: 0.75rem;
@@ -110,8 +167,18 @@ h1 { font-size: 1.5rem; }
 .due-today   { background: #fff3e0; color: #e65100; }
 .due-future  { background: #e8f5e9; color: #2e7d32; }
 
+.tag-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.tag-work    { background: #e3f2fd; color: #1565c0; }
+.tag-private { background: #f3e5f5; color: #6a1b9a; }
+
 .delete-btn {
-  padding: 4px 10px;
+  margin-left: auto;
+  padding: 5px 12px;
   background: #ef5350;
   color: white;
   border: none;
@@ -119,8 +186,10 @@ h1 { font-size: 1.5rem; }
   cursor: pointer;
   font-size: 0.85rem;
   white-space: nowrap;
+  min-height: 32px;
 }
-.delete-btn:hover { background: #b71c1c; }
+.delete-btn:hover  { background: #b71c1c; }
+.delete-btn:active { background: #7f0000; }
 
 #input-area label {
   position: absolute;
@@ -144,13 +213,28 @@ h1 { font-size: 1.5rem; }
   </header>
   <main>
     <section id="input-area" aria-label="タスク入力">
+      <label for="tag-select">タグ</label>
+      <select id="tag-select">
+        <option value="">タグなし</option>
+        <option value="仕事">💼 仕事</option>
+        <option value="プライベート">🏠 プライベート</option>
+      </select>
       <label for="task-input">タスク</label>
       <input type="text" id="task-input" placeholder="タスクを入力...">
       <label for="due-date-input">期日</label>
       <input type="date" id="due-date-input">
       <button id="add-btn">追加</button>
     </section>
-    <section id="filter-area" aria-label="フィルター"></section>
+    <section id="filter-area" aria-label="フィルター">
+      <div class="filter-section">
+        <div class="filter-label">タグ</div>
+        <div id="tag-filter"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">期日</div>
+        <div id="date-filter"></div>
+      </div>
+    </section>
     <ul id="task-list" aria-label="タスク一覧"></ul>
     <p id="stats" aria-live="polite"></p>
   </main>
@@ -158,7 +242,8 @@ h1 { font-size: 1.5rem; }
     // --- データ層 ---
     const STORAGE_KEY = 'todo-app-tasks';
     let tasks = [];
-    let currentFilter = 'all'; // 'all' | 'overdue' | 'today' | 'upcoming'
+    let currentDateFilter = 'all'; // 'all' | 'overdue' | 'today' | 'upcoming'
+    let currentTagFilter  = 'all'; // 'all' | '仕事' | 'プライベート'
 
     function loadTasks() {
       try {
@@ -176,7 +261,7 @@ h1 { font-size: 1.5rem; }
       } catch (e) { /* プライベートブラウジング等で失敗する場合は無視 */ }
     }
 
-    function addTask(text, dueDate) {
+    function addTask(text, dueDate, tag) {
       const trimmed = text.trim();
       if (!trimmed) return false;
       tasks.push({
@@ -184,6 +269,7 @@ h1 { font-size: 1.5rem; }
         text: trimmed,
         completed: false,
         dueDate: dueDate || '',
+        tag: tag || '',
         createdAt: new Date().toISOString()
       });
       saveTasks();
@@ -231,10 +317,21 @@ h1 { font-size: 1.5rem; }
 
     function getFilteredTasks() {
       const today = getToday();
-      if (currentFilter === 'overdue')  return tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed);
-      if (currentFilter === 'today')    return tasks.filter(t => t.dueDate === today);
-      if (currentFilter === 'upcoming') return tasks.filter(t => t.dueDate && t.dueDate > today);
-      return tasks;
+      let result = tasks;
+      // タグフィルター
+      if (currentTagFilter !== 'all') result = result.filter(t => t.tag === currentTagFilter);
+      // 日付フィルター
+      if (currentDateFilter === 'overdue')  result = result.filter(t => t.dueDate && t.dueDate < today && !t.completed);
+      if (currentDateFilter === 'today')    result = result.filter(t => t.dueDate === today);
+      if (currentDateFilter === 'upcoming') result = result.filter(t => t.dueDate && t.dueDate > today);
+      return result;
+    }
+
+    function getTagBadge(tag) {
+      if (!tag) return '';
+      const cls = tag === '仕事' ? 'tag-work' : 'tag-private';
+      const icon = tag === '仕事' ? '💼' : '🏠';
+      return `<span class="tag-badge ${cls}">${icon} ${escapeHtml(tag)}</span>`;
     }
 
     function renderTasks() {
@@ -248,30 +345,47 @@ h1 { font-size: 1.5rem; }
 
       list.innerHTML = filtered.map(task => `
         <li class="task-item${task.completed ? ' completed' : ''}">
-          <input type="checkbox" aria-label="${escapeHtml(task.text)}" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
-          <span class="task-text">${escapeHtml(task.text)}</span>
-          ${getDueBadge(task.dueDate, task.completed)}
-          <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
+          <div class="task-main">
+            <input type="checkbox" aria-label="${escapeHtml(task.text)}" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
+            <span class="task-text">${escapeHtml(task.text)}</span>
+          </div>
+          <div class="task-footer">
+            ${getTagBadge(task.tag)}
+            ${getDueBadge(task.dueDate, task.completed)}
+            <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
+          </div>
         </li>
       `).join('');
     }
 
+    function renderTagFilter() {
+      const area = document.getElementById('tag-filter');
+      const workCount    = tasks.filter(t => t.tag === '仕事').length;
+      const privateCount = tasks.filter(t => t.tag === 'プライベート').length;
+      const filters = [
+        { key: 'all',        label: 'すべて' },
+        { key: '仕事',       label: `💼 仕事${workCount ? ` (${workCount})` : ''}` },
+        { key: 'プライベート', label: `🏠 プライベート${privateCount ? ` (${privateCount})` : ''}` },
+      ];
+      area.innerHTML = filters.map(f =>
+        `<button class="filter-btn${currentTagFilter === f.key ? ' active' : ''}" data-tag-filter="${f.key}">${f.label}</button>`
+      ).join('');
+    }
+
     function renderDateFilter() {
-      const area = document.getElementById('filter-area');
+      const area = document.getElementById('date-filter');
       const today = getToday();
       const overdueCount  = tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed).length;
       const todayCount    = tasks.filter(t => t.dueDate === today).length;
       const upcomingCount = tasks.filter(t => t.dueDate && t.dueDate > today).length;
-
       const filters = [
         { key: 'all',      label: 'すべて' },
         { key: 'overdue',  label: `期限切れ${overdueCount ? ` (${overdueCount})` : ''}` },
         { key: 'today',    label: `今日${todayCount ? ` (${todayCount})` : ''}` },
         { key: 'upcoming', label: `今後${upcomingCount ? ` (${upcomingCount})` : ''}` },
       ];
-
       area.innerHTML = filters.map(f =>
-        `<button class="filter-btn${currentFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`
+        `<button class="filter-btn${currentDateFilter === f.key ? ' active' : ''}" data-date-filter="${f.key}">${f.label}</button>`
       ).join('');
     }
 
@@ -279,13 +393,12 @@ h1 { font-size: 1.5rem; }
       const source = getFilteredTasks();
       const completed = source.filter(t => t.completed).length;
       const remaining = source.length - completed;
-      const labels = { all: '', overdue: '[期限切れ] ', today: '[今日] ', upcoming: '[今後] ' };
-      document.getElementById('stats').textContent =
-        `${labels[currentFilter]}残り ${remaining}件 / 完了 ${completed}件`;
+      document.getElementById('stats').textContent = `残り ${remaining}件 / 完了 ${completed}件`;
     }
 
     function render() {
       renderTasks();
+      renderTagFilter();
       renderDateFilter();
       updateStats();
     }
@@ -299,9 +412,11 @@ h1 { font-size: 1.5rem; }
       document.getElementById('add-btn').addEventListener('click', () => {
         const textInput    = document.getElementById('task-input');
         const dueDateInput = document.getElementById('due-date-input');
-        if (addTask(textInput.value, dueDateInput.value)) {
+        const tagSelect    = document.getElementById('tag-select');
+        if (addTask(textInput.value, dueDateInput.value, tagSelect.value)) {
           textInput.value    = '';
           dueDateInput.value = '';
+          tagSelect.value    = '';
           render();
           textInput.focus();
         }
@@ -325,10 +440,13 @@ h1 { font-size: 1.5rem; }
         }
       });
 
-      // 日付フィルター（イベント委譲）
+      // タグ・日付フィルター（イベント委譲）
       document.getElementById('filter-area').addEventListener('click', e => {
-        if (e.target.matches('.filter-btn')) {
-          currentFilter = e.target.dataset.filter;
+        if (e.target.matches('[data-tag-filter]')) {
+          currentTagFilter = e.target.dataset.tagFilter;
+          render();
+        } else if (e.target.matches('[data-date-filter]')) {
+          currentDateFilter = e.target.dataset.dateFilter;
           render();
         }
       });
