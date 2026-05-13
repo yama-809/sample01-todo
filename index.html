@@ -23,23 +23,26 @@ h1 { font-size: 1.5rem; }
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 #task-input {
   flex: 1;
+  min-width: 160px;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
 }
 
-#tag-input {
+#due-date-input {
   width: 160px;
   min-width: 0;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
+  cursor: pointer;
 }
 
 #add-btn {
@@ -97,14 +100,15 @@ h1 { font-size: 1.5rem; }
 
 .task-text { flex: 1; word-break: break-word; }
 
-.tags { display: flex; gap: 4px; flex-wrap: wrap; }
-.tag {
-  background: #e3f2fd;
-  color: #1565c0;
+.due-badge {
+  font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
+  white-space: nowrap;
 }
+.due-overdue { background: #ffebee; color: #c62828; }
+.due-today   { background: #fff3e0; color: #e65100; }
+.due-future  { background: #e8f5e9; color: #2e7d32; }
 
 .delete-btn {
   padding: 4px 10px;
@@ -142,11 +146,11 @@ h1 { font-size: 1.5rem; }
     <section id="input-area" aria-label="タスク入力">
       <label for="task-input">タスク</label>
       <input type="text" id="task-input" placeholder="タスクを入力...">
-      <label for="tag-input">タグ</label>
-      <input type="text" id="tag-input" placeholder="タグ (カンマ区切り)">
+      <label for="due-date-input">期日</label>
+      <input type="date" id="due-date-input">
       <button id="add-btn">追加</button>
     </section>
-    <section id="filter-area"></section>
+    <section id="filter-area" aria-label="フィルター"></section>
     <ul id="task-list" aria-label="タスク一覧"></ul>
     <p id="stats" aria-live="polite"></p>
   </main>
@@ -154,7 +158,7 @@ h1 { font-size: 1.5rem; }
     // --- データ層 ---
     const STORAGE_KEY = 'todo-app-tasks';
     let tasks = [];
-    let currentFilter = '';
+    let currentFilter = 'all'; // 'all' | 'overdue' | 'today' | 'upcoming'
 
     function loadTasks() {
       try {
@@ -172,18 +176,14 @@ h1 { font-size: 1.5rem; }
       } catch (e) { /* プライベートブラウジング等で失敗する場合は無視 */ }
     }
 
-    function addTask(text, tagsInput) {
+    function addTask(text, dueDate) {
       const trimmed = text.trim();
       if (!trimmed) return false;
-      const tags = tagsInput
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0);
       tasks.push({
         id: crypto.randomUUID(),
         text: trimmed,
         completed: false,
-        tags: tags,
+        dueDate: dueDate || '',
         createdAt: new Date().toISOString()
       });
       saveTasks();
@@ -210,11 +210,36 @@ h1 { font-size: 1.5rem; }
       return div.innerHTML;
     }
 
+    function getToday() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function formatDate(dueDate) {
+      if (!dueDate) return '';
+      const [y, m, d] = dueDate.split('-');
+      return `${y}/${m}/${d}`;
+    }
+
+    function getDueBadge(dueDate, completed) {
+      if (!dueDate) return '';
+      if (completed) return `<span class="due-badge" style="background:#f5f5f5;color:#9e9e9e;">${formatDate(dueDate)}</span>`;
+      const today = getToday();
+      if (dueDate < today) return `<span class="due-badge due-overdue">⚠ ${formatDate(dueDate)}</span>`;
+      if (dueDate === today) return `<span class="due-badge due-today">今日 ${formatDate(dueDate)}</span>`;
+      return `<span class="due-badge due-future">${formatDate(dueDate)}</span>`;
+    }
+
+    function getFilteredTasks() {
+      const today = getToday();
+      if (currentFilter === 'overdue')  return tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed);
+      if (currentFilter === 'today')    return tasks.filter(t => t.dueDate === today);
+      if (currentFilter === 'upcoming') return tasks.filter(t => t.dueDate && t.dueDate > today);
+      return tasks;
+    }
+
     function renderTasks() {
       const list = document.getElementById('task-list');
-      const filtered = currentFilter
-        ? tasks.filter(t => t.tags.includes(currentFilter))
-        : tasks;
+      const filtered = getFilteredTasks();
 
       if (filtered.length === 0) {
         list.innerHTML = '<li style="color:#9e9e9e;padding:12px;">タスクがありません</li>';
@@ -223,46 +248,45 @@ h1 { font-size: 1.5rem; }
 
       list.innerHTML = filtered.map(task => `
         <li class="task-item${task.completed ? ' completed' : ''}">
-          <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
+          <input type="checkbox" aria-label="${escapeHtml(task.text)}" ${task.completed ? 'checked' : ''} data-id="${escapeHtml(task.id)}">
           <span class="task-text">${escapeHtml(task.text)}</span>
-          <span class="tags">
-            ${task.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
-          </span>
-          <button class="delete-btn" data-id="${escapeHtml(task.id)}">削除</button>
+          ${getDueBadge(task.dueDate, task.completed)}
+          <button class="delete-btn" aria-label="「${escapeHtml(task.text)}」を削除" data-id="${escapeHtml(task.id)}">削除</button>
         </li>
       `).join('');
     }
 
-    function getAllTags() {
-      const tagSet = new Set();
-      tasks.forEach(t => t.tags.forEach(tag => tagSet.add(tag)));
-      return [...tagSet];
-    }
-
-    function renderTagFilter() {
+    function renderDateFilter() {
       const area = document.getElementById('filter-area');
-      const tags = getAllTags();
-      const buttons = [
-        `<button class="filter-btn${currentFilter === '' ? ' active' : ''}" data-tag="">すべて</button>`,
-        ...tags.map(tag =>
-          `<button class="filter-btn${currentFilter === tag ? ' active' : ''}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`
-        )
+      const today = getToday();
+      const overdueCount  = tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed).length;
+      const todayCount    = tasks.filter(t => t.dueDate === today).length;
+      const upcomingCount = tasks.filter(t => t.dueDate && t.dueDate > today).length;
+
+      const filters = [
+        { key: 'all',      label: 'すべて' },
+        { key: 'overdue',  label: `期限切れ${overdueCount ? ` (${overdueCount})` : ''}` },
+        { key: 'today',    label: `今日${todayCount ? ` (${todayCount})` : ''}` },
+        { key: 'upcoming', label: `今後${upcomingCount ? ` (${upcomingCount})` : ''}` },
       ];
-      area.innerHTML = buttons.join('');
+
+      area.innerHTML = filters.map(f =>
+        `<button class="filter-btn${currentFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`
+      ).join('');
     }
 
     function updateStats() {
-      const source = currentFilter ? tasks.filter(t => t.tags.includes(currentFilter)) : tasks;
+      const source = getFilteredTasks();
       const completed = source.filter(t => t.completed).length;
       const remaining = source.length - completed;
-      const prefix = currentFilter ? `[${currentFilter}] ` : '';
+      const labels = { all: '', overdue: '[期限切れ] ', today: '[今日] ', upcoming: '[今後] ' };
       document.getElementById('stats').textContent =
-        `${prefix}残り ${remaining}件 / 完了 ${completed}件`;
+        `${labels[currentFilter]}残り ${remaining}件 / 完了 ${completed}件`;
     }
 
     function render() {
       renderTasks();
-      renderTagFilter();
+      renderDateFilter();
       updateStats();
     }
 
@@ -273,22 +297,22 @@ h1 { font-size: 1.5rem; }
 
       // タスク追加
       document.getElementById('add-btn').addEventListener('click', () => {
-        const textInput = document.getElementById('task-input');
-        const tagInput = document.getElementById('tag-input');
-        if (addTask(textInput.value, tagInput.value)) {
-          textInput.value = '';
-          tagInput.value = '';
+        const textInput    = document.getElementById('task-input');
+        const dueDateInput = document.getElementById('due-date-input');
+        if (addTask(textInput.value, dueDateInput.value)) {
+          textInput.value    = '';
+          dueDateInput.value = '';
           render();
           textInput.focus();
         }
       });
 
-      // Enter キーで追加（task-input と tag-input 両方対応）
+      // Enter キーで追加
       function handleEnterKey(e) {
         if (e.key === 'Enter') document.getElementById('add-btn').click();
       }
       document.getElementById('task-input').addEventListener('keydown', handleEnterKey);
-      document.getElementById('tag-input').addEventListener('keydown', handleEnterKey);
+      document.getElementById('due-date-input').addEventListener('keydown', handleEnterKey);
 
       // チェックボックスと削除ボタン（イベント委譲）
       document.getElementById('task-list').addEventListener('click', e => {
@@ -301,10 +325,10 @@ h1 { font-size: 1.5rem; }
         }
       });
 
-      // タグフィルター（イベント委譲）
+      // 日付フィルター（イベント委譲）
       document.getElementById('filter-area').addEventListener('click', e => {
         if (e.target.matches('.filter-btn')) {
-          currentFilter = e.target.dataset.tag;
+          currentFilter = e.target.dataset.filter;
           render();
         }
       });
