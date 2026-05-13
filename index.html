@@ -27,18 +27,16 @@ h1 { font-size: 1.4rem; }
   h1 { font-size: 1.5rem; }
 }
 
-/* 入力エリア: モバイルはグリッド2列 */
+/* 入力エリア: 1行目タスク全幅、2行目タグ+期日+追加 */
 #input-area {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-/* タグ・タスクは全幅 */
-#tag-select,
 #task-input {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* 全幅 */
 }
 
 #tag-select,
@@ -51,7 +49,7 @@ h1 { font-size: 1.4rem; }
   width: 100%;
 }
 
-#tag-select { background: white; cursor: pointer; }
+#tag-select { background: white; cursor: pointer; width: auto; }
 #due-date-input { cursor: pointer; min-width: 0; }
 
 #add-btn {
@@ -66,15 +64,6 @@ h1 { font-size: 1.4rem; }
 }
 #add-btn:hover  { background: #388e3c; }
 #add-btn:active { background: #2e7d32; }
-
-/* デスクトップは1行レイアウト */
-@media (min-width: 540px) {
-  #input-area { grid-template-columns: auto 1fr auto auto; }
-  #tag-select   { grid-column: 1; }
-  #task-input   { grid-column: 2; }
-  #due-date-input { grid-column: 3; width: auto; }
-  #add-btn      { grid-column: 4; }
-}
 
 /* フィルター */
 #filter-area {
@@ -213,14 +202,14 @@ h1 { font-size: 1.4rem; }
   </header>
   <main>
     <section id="input-area" aria-label="タスク入力">
+      <label for="task-input">タスク</label>
+      <input type="text" id="task-input" placeholder="タスクを入力...">
       <label for="tag-select">タグ</label>
       <select id="tag-select">
         <option value="">タグなし</option>
         <option value="仕事">💼 仕事</option>
         <option value="プライベート">🏠 プライベート</option>
       </select>
-      <label for="task-input">タスク</label>
-      <input type="text" id="task-input" placeholder="タスクを入力...">
       <label for="due-date-input">期日</label>
       <input type="date" id="due-date-input">
       <button id="add-btn">追加</button>
