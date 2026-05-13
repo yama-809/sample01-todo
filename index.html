@@ -264,7 +264,50 @@ h1 { font-size: 1.5rem; }
       updateStats();
     }
 
-    // --- イベント層は Task 5 で追加 ---
+    // --- イベント層 ---
+    function init() {
+      loadTasks();
+      render();
+
+      // タスク追加
+      document.getElementById('add-btn').addEventListener('click', () => {
+        const textInput = document.getElementById('task-input');
+        const tagInput = document.getElementById('tag-input');
+        if (addTask(textInput.value, tagInput.value)) {
+          textInput.value = '';
+          tagInput.value = '';
+          render();
+          textInput.focus();
+        }
+      });
+
+      // Enter キーで追加
+      document.getElementById('task-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('add-btn').click();
+      });
+
+      // チェックボックスと削除ボタン（イベント委譲）
+      document.getElementById('task-list').addEventListener('click', e => {
+        if (e.target.matches('input[type="checkbox"]')) {
+          toggleTask(e.target.dataset.id);
+          render();
+        }
+        if (e.target.matches('.delete-btn')) {
+          deleteTask(e.target.dataset.id);
+          render();
+        }
+      });
+
+      // タグフィルター（イベント委譲）
+      document.getElementById('filter-area').addEventListener('click', e => {
+        if (e.target.matches('.filter-btn')) {
+          currentFilter = e.target.dataset.tag;
+          render();
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
